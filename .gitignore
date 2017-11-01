@@ -1,0 +1,9 @@
+.idea
+.DS_Store
+.gvm_local
+tmp/
+bin/
+pkg/
+src/github.com/
+src/gopkg.in/
+src/heartbeat/lastupdate.tmp
