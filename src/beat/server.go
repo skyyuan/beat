@@ -7,6 +7,10 @@ import (
 	"flag"
 	"encoding/json"
 	"log"
+	"beat/models"
+	"beat/utils"
+	"strings"
+	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -14,7 +18,7 @@ const (
 	CMD_HEARTBEAT = "HeartBeat"
 )
 
-var addr = flag.String("Addr", ":30001", "")
+var addr = flag.String("Addr", ":30003", "")
 
 func init() {
 	flag.Parse()
@@ -59,6 +63,31 @@ func recvUDPMsg(conn *net.UDPConn){
 		fmt.Println(err)
 		return
 	}
+	mdb, mSession := utils.GetMgoDbSession()
+	defer mSession.Close()
+	dta := strings.Split(rmAddr.String(), ":")
+	device_id := dat["device_id"].(string)
+	tp := dat["type"].(string)
+	if dat["command"] == CMD_NewDetector {
+
+		device_id := dat["device_id"].(string)
+		tp := dat["type"].(string)
+		det, e := models.GetDetectorByDeviceId(mdb,device_id, tp)
+		if e == mgo.ErrNotFound {
+			models.NewDetector(mdb, device_id, tp, dta[0])
+		} else {
+			det.UpdateByParams(mdb, dta[0])
+		}
+	}
+
+	if  dat["command"] == CMD_HEARTBEAT {
+		det, e := models.GetDetectorByDeviceId(mdb,device_id,tp)
+		if e == mgo.ErrNotFound {
+			return
+		}
+		det.UpdateByStatus(mdb)
+	}
+
 
 	fmt.Println(dat["command"])
 	fmt.Println(dat["type"])

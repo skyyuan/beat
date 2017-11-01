@@ -35,62 +35,21 @@ func NewDetector(db *mgo.Database, DeviceId, tp, Ip string) (detector Detector, 
 	return
 }
 
-func FindByDetector(db *mgo.Database, id int) (detector Detector, err error) {
+func GetDetectorByDeviceId(db *mgo.Database, deviceId, tp string) (detector Detector, err error) {
 	collection := db.C("detectors")
-	err = collection.Find(bson.M{"detector_id": id}).One(&detector)
+	err = collection.Find(bson.M{"device_id": deviceId, "type": tp}).One(&detector)
 	return
 }
 
-func GetDetectors(db *mgo.Database) (detectors []Detector, err error) {
-	collection := db.C("detectors")
-	err = collection.Find(nil).All(&detectors)
+func (self *Detector) UpdateByParams(db *mgo.Database, ip string) (err error) {
+	query := bson.M{"ip": ip, "updated_at": bson.Now()}
+	userCollection := db.C("detectors")
+	err = userCollection.Update(bson.M{"_id": self.Id_}, bson.M{"$set": query})
 	return
 }
 
-func GetAllDetectors(db *mgo.Database, page, perPage int, deviceId string) (detectors []Detector, err error) {
-	collection := db.C("detectors")
-	query := bson.M{}
-	if deviceId != "" {
-		query["device_id"] = bson.M{"$regex": deviceId}
-	}
-	err = collection.Find(query).Limit(perPage).Skip((page - 1) * perPage).Sort("-created_at").All(&detectors)
-	return
-}
-
-func GetAllDetectorsCount(db *mgo.Database, deviceId string) (count int, err error) {
-	collection := db.C("detectors")
-	query := bson.M{}
-	if deviceId != "" {
-		query["device_id"] = bson.M{"$regex": deviceId}
-	}
-	count, err = collection.Find(query).Count()
-	return
-}
-
-func GetDetectorByDeviceId(db *mgo.Database, deviceId string) (detector Detector, err error) {
-	collection := db.C("detectors")
-	err = collection.Find(bson.M{"device_id": deviceId}).One(&detector)
-	return
-}
-
-func DeleteDetector(db *mgo.Database, id int) (err error) {
-	collection := db.C("detectors")
-	err = collection.Remove(bson.M{"detector_id": id})
-	return
-}
-
-func (self *Detector) UpdateByParams(db *mgo.Database, DeviceId, location, ip string, factor float64,  prevDetectorId, nextDetectorId string) (err error) {
-	query := bson.M{"factor": factor,"device_id": DeviceId, "location": location, "ip": ip, "updated_at": bson.Now()}
-	if prevDetectorId != "" {
-		query["prev_detector_id"] = bson.ObjectIdHex(prevDetectorId)
-	}else {
-		query["prev_detector_id"] = nil
-	}
-	if nextDetectorId != "" {
-		query["next_detector_id"] = bson.ObjectIdHex(nextDetectorId)
-	}else {
-		query["next_detector_id"] = nil
-	}
+func (self *Detector) UpdateByStatus(db *mgo.Database) (err error) {
+	query := bson.M{"status": "true", "updated_at": bson.Now()}
 	userCollection := db.C("detectors")
 	err = userCollection.Update(bson.M{"_id": self.Id_}, bson.M{"$set": query})
 	return
