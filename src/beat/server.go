@@ -16,6 +16,8 @@ import (
 const (
 	CMD_NewDetector = "NewDetector"
 	CMD_HEARTBEAT = "HeartBeat"
+	CMD_NewSystemSchedule = "NewSystemSchedule"
+	CMD_ScheduleHEARTBEAT = "ScheduleHEARTBEAT"
 )
 
 var addr = flag.String("Addr", ":30003", "")
@@ -66,10 +68,8 @@ func recvUDPMsg(conn *net.UDPConn){
 	mdb, mSession := utils.GetMgoDbSession()
 	defer mSession.Close()
 	dta := strings.Split(rmAddr.String(), ":")
-	device_id := dat["device_id"].(string)
-	tp := dat["type"].(string)
-	if dat["command"] == CMD_NewDetector {
 
+	if dat["command"] == CMD_NewDetector {
 		device_id := dat["device_id"].(string)
 		tp := dat["type"].(string)
 		det, e := models.GetDetectorByDeviceId(mdb,device_id, tp)
@@ -81,11 +81,30 @@ func recvUDPMsg(conn *net.UDPConn){
 	}
 
 	if  dat["command"] == CMD_HEARTBEAT {
+		device_id := dat["device_id"].(string)
+		tp := dat["type"].(string)
 		det, e := models.GetDetectorByDeviceId(mdb,device_id,tp)
 		if e == mgo.ErrNotFound {
 			return
 		}
 		det.UpdateByStatus(mdb)
+	}
+
+	if  dat["command"] == CMD_NewSystemSchedule {
+		name := dat["name"].(string)
+		_, err := models.GetServiceManage(mdb, name)
+		if err == mgo.ErrNotFound {
+			models.NewServiceManage(mdb, name)
+		}
+	}
+
+	if  dat["command"] == CMD_ScheduleHEARTBEAT {
+		name := dat["name"].(string)
+		manage, err := models.GetServiceManage(mdb, name)
+		if err == mgo.ErrNotFound {
+			return
+		}
+		manage.UpdateByStatus(mdb)
 	}
 
 
