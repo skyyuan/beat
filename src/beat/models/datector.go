@@ -15,18 +15,20 @@ type Detector struct {
 	Location       string        `bson:"location"`
 	Ip             string        `bson:ip`
 	Status         string        `bson:status`
+	CheckStatus    string        `bson:check_status`
 	Type           string        `bson:type`
 	Factor         float64       `bson:factor`
 	CommonModel    `bson:",inline"`
 }
 
-func NewDetector(db *mgo.Database, DeviceId, tp, Ip string) (detector Detector, err error) {
+func NewDetector(db *mgo.Database, DeviceId, tp, Ip, checkStatus string) (detector Detector, err error) {
 	currentTime := bson.Now()
 	detector.Id_ = bson.NewObjectId()
 	detector.DetectorId, _ = GetAutoIncreaseId(db, "detector_id")
 	detector.DeviceId = DeviceId
 	detector.Ip = Ip
 	detector.Status = "true"
+	detector.CheckStatus = checkStatus
 	detector.Type = tp
 	detector.CreatedAt = currentTime
 	detector.UpdatedAt = currentTime
@@ -41,8 +43,8 @@ func GetDetectorByDeviceId(db *mgo.Database, deviceId, tp string) (detector Dete
 	return
 }
 
-func (self *Detector) UpdateByParams(db *mgo.Database, ip string) (err error) {
-	query := bson.M{"ip": ip, "updated_at": bson.Now()}
+func (self *Detector) UpdateByParams(db *mgo.Database, ip, checkStatus string) (err error) {
+	query := bson.M{"ip": ip, "check_status": checkStatus,  "updated_at": bson.Now()}
 	userCollection := db.C("detectors")
 	err = userCollection.Update(bson.M{"_id": self.Id_}, bson.M{"$set": query})
 	return

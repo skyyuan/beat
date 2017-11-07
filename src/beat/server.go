@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net"
-	//"beat/utils"
 	"flag"
 	"encoding/json"
 	"log"
@@ -64,7 +63,7 @@ func recvUDPMsg(conn *net.UDPConn){
 	byt := []byte(res)
 	var dat map[string]interface{}
 	if err = json.Unmarshal(byt, &dat); err != nil {
-		ackBuf = []byte("NO!")
+		ackBuf = []byte("no!")
 		fmt.Println("已经报错了")
 		fmt.Println(err)
 		return
@@ -76,11 +75,12 @@ func recvUDPMsg(conn *net.UDPConn){
 	if dat["command"] == CMD_NewDetector {
 		device_id := dat["device_id"].(string)
 		tp := dat["type"].(string)
+		checkStatus := dat["check_status"].(string)
 		det, e := models.GetDetectorByDeviceId(mdb,device_id, tp)
 		if e == mgo.ErrNotFound {
-			models.NewDetector(mdb, device_id, tp, dta[0])
+			models.NewDetector(mdb, device_id, tp, dta[0], checkStatus)
 		} else {
-			det.UpdateByParams(mdb, dta[0])
+			det.UpdateByParams(mdb, dta[0], checkStatus)
 		}
 	}
 
