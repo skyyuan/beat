@@ -20,6 +20,8 @@ const (
 	CMD_ScheduleHEARTBEAT = "ScheduleHEARTBEAT"
 	CMD_NewSystemDetect = "NewSystemDetect"
 	CMD_DetectHEARTBEAT = "DetectHEARTBEAT"
+	CMD_NewSystemQnsq = "NewSystemQnsq"
+	CMD_QNSQHEARTBEAT = "QNSQHEARTBEAT"
 )
 
 var addr = flag.String("Addr", ":30003", "")
@@ -92,7 +94,7 @@ func recvUDPMsg(conn *net.UDPConn){
 		det.UpdateByStatus(mdb)
 	}
 
-	if  dat["command"] == CMD_NewSystemSchedule || dat["command"] == CMD_NewSystemDetect {
+	if  dat["command"] == CMD_NewSystemSchedule || dat["command"] == CMD_NewSystemDetect || dat["command"] == CMD_NewSystemQnsq {
 		name := dat["name"].(string)
 		_, err := models.GetServiceManage(mdb, name)
 		if err == mgo.ErrNotFound {
@@ -100,7 +102,7 @@ func recvUDPMsg(conn *net.UDPConn){
 		}
 	}
 
-	if  dat["command"] == CMD_ScheduleHEARTBEAT || dat["command"] == CMD_DetectHEARTBEAT {
+	if  dat["command"] == CMD_ScheduleHEARTBEAT || dat["command"] == CMD_DetectHEARTBEAT || dat["command"] == CMD_QNSQHEARTBEAT {
 		name := dat["name"].(string)
 		manage, err := models.GetServiceManage(mdb, name)
 		if err == mgo.ErrNotFound {
